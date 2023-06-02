@@ -1,87 +1,71 @@
 #include<stdio.h>
-int main()
-{
-int count,j,n,time,flag=0,time_quantum,ch=0;
-int wait_time=0,turnaround_time=0,at[10],bt[10],rt[10];
-int endTime,i,smallest;
-int remain=0,sum_wait=0,sum_turnaround=0;
-printf("Enter the choice:\n");
-printf("1.Round Robin \n2.SRTF \n");
-scanf("%d",&ch);
-printf("Enter no of Processes : ");
-scanf("%d",&n);
-for(i=0;i<n;i++)
-{
-printf("Enter arrival time for Process P%d : ",i+1);
-scanf("%d",&at[i]);
-printf("Enter burst time for Process P%d :",i+1);
-scanf("%d",&bt[i]);
-rt[i]=bt[i];
+
+void rr(int n, int tq, int at[], int bt[]) {
+    int rt[10], wt[10], tat[10], rem = n, t = 0, i, flag = 0, twt = 0, ttat = 0;
+    for (i = 0; i < n; i++) rt[i] = bt[i];
+    printf("\nProcess\t| Turnaround Time | Waiting Time\n");
+    while (rem != 0) {
+        for (i = 0; i < n; i++) {
+            if (rt[i] > 0) {
+                if (rt[i] <= tq) { t += rt[i]; rt[i] = 0; flag = 1; }
+                else { rt[i] -= tq; t += tq; }
+                if (rt[i] == 0 && flag == 1) {
+                    rem--; printf("P[%d]\t|\t%d\t|\t%d\n", i + 1, t - at[i], t - at[i] - bt[i]);
+                    twt += t - at[i] - bt[i]; ttat += t - at[i]; flag = 0;
+                }
+            }
+        }
+    }
+    printf("\nAverage Waiting Time: %.2f\n", (float) twt / n);
+    printf("Average Turnaround Time: %.2f\n", (float) ttat / n);
 }
-switch(ch)
-{
-case 1:
-printf("Enter Time Quantum:\t");
-scanf("%d",&time_quantum);
-remain=n;
-printf("\nProcess time|Turnaround Time|Waiting Time\n");
-for(time=0,count=0;remain!=0;)
-{
-if(rt[count]<=time_quantum && rt[count]>0)
-{
-time+=rt[count];
-rt[count]=0;
-flag=1;
+
+void srtf(int n, int at[], int bt[]) {
+    int rt[10], wt[10], tat[10], i, s, t = 0, rem = n, swt = 0, stat = 0;
+    for (i = 0; i < n; i++) rt[i] = bt[i];
+    rt[9] = 9999;
+    printf("\nProcess\t| Turnaround Time | Waiting Time\n");
+    while (rem != 0) {
+        s = 9;
+        for (i = 0; i < n; i++) {
+            if (at[i] <= t && rt[i] < rt[s] && rt[i] > 0) s = i;
+        }
+        rt[s]--;
+        if (rt[s] == 0) {
+            rem--;
+            printf("P[%d]\t|\t%d\t|\t%d\n", s + 1, t + 1 - at[s], t + 1 - bt[s] - at[s]);
+            swt += t + 1 - bt[s] - at[s];
+            stat += t + 1 - at[s];
+        }
+        t++;
+    }
+    printf("\nAverage Waiting Time: %.2f\n", (float) swt / n);
+    printf("Average Turnaround Time: %.2f\n", (float) stat / n);
 }
-else if(rt[count]>0)
-{
-rt[count]-=time_quantum;
-time+=time_quantum;
-}
-if(rt[count]==0 && flag==1)
-{
-remain--;
-printf("P[%d]\t|\t%d\t|\t%d\n",count+1,time-at[count],time-at[count]-bt[count]);
-wait_time+=time-at[count]-bt[count];
-turnaround_time+=time-at[count];
-flag=0;
-}
-if(count==n-1)
-count=0;
-else if(at[count+1]<=time)
-count++;
-else
-count=0;
-}
-printf("\nAverage Waiting Time= %.2f\n",wait_time*1.0/n);
-printf("Avg Turnaround Time = %.2f\n",turnaround_time*1.0/n);
-break;
-case 2:
-remain=0;
-printf("\nProcesst|Turnaround Time| Waiting Timen\n");
-rt[9]=9999;
-for(time=0;remain!=n;time++)
-{
-smallest=9;
-for(i=0;i<n;i++)
-if(at[i]<=time && rt[i]<rt[smallest] && rt[i]>0)
-smallest=i;
-rt[smallest]--;
-if(rt[smallest]==0)
-{
-remain++;
-endTime=time+1;
-printf("\nP[%d]\t|\t%d\t|\t%d",smallest+1,endTime-at[smallest],endTime-bt[smallest]-at[smallest]);
-printf("\n");
-sum_wait+=endTime-bt[smallest]-at[smallest];
-sum_turnaround+=endTime-at[smallest];
-}
-}
-printf("\nAverage waiting time = %f\n",sum_wait*1.0/n);
-printf("Average Turnaround time = %f",sum_turnaround*1.0/n);
-break;
-default:
-printf("Invalid\n");
-}
-return 0;
+int main() {
+    int c, n, at[10], bt[10], tq; // Declare tq here
+    printf("Enter choice:\n1. Round Robin\n2. SRTF\n");
+    scanf("%d", &c);
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) {
+        printf("Arrival time for P%d: ", i + 1);
+        scanf("%d", &at[i]);
+        printf("Burst time for P%d: ", i + 1);
+        scanf("%d", &bt[i]);
+    }
+    switch (c) {
+        case 1:
+            printf("Enter Time Quantum: ");
+            scanf("%d", &tq);
+            rr(n, tq, at, bt);
+            break;
+        case 2:
+            srtf(n, at, bt);
+            break;
+        default:
+            printf("Invalid choice\n");
+            break;
+    }
+    return 0;
 }
